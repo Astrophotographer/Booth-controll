@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#f6f1e7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="바자회 부스" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <title>바자회 부스</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&display=swap" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <p class="net" id="net" hidden>서버에 연결되지 않았습니다.</p>
+
+    <section class="screen scroll" data-screen="role" hidden>
+      <div class="pad">
+        <p class="kicker">첫 실행</p>
+        <h1>이 폰은<br>어디에 쓸까요</h1>
+        <div class="roles">
+          <button type="button" class="role" data-role="booth">
+            <strong class="role-label">부스용</strong>
+            <span>부스 포화상태를 표시합니다.</span>
+          </button>
+          <button type="button" class="role" data-role="control">
+            <strong class="role-label">관제용</strong>
+            <span>모든 부스와 소통합니다.</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen scroll" data-screen="setup" hidden>
+      <form class="pad setup" id="setupForm">
+        <button type="button" class="back" id="setupBack">← 역할</button>
+        <h1>부스를<br>열어 주세요</h1>
+        <label>부스명<input name="name" maxlength="40" required placeholder="복음팔찌" /></label>
+        <label>메인스탭 1명<input name="staff" maxlength="40" required placeholder="홍길동" /></label>
+        <p class="note">관제 화면에는 「부스명 · 메인스탭 이름」으로 보입니다.</p>
+        <p class="form-error" id="setupError" hidden></p>
+        <div class="grow"></div>
+        <button type="submit" class="cta">이 부스로 시작</button>
+      </form>
+    </section>
+
+    <section class="screen" data-screen="booth" hidden>
+      <div class="top">
+        <div>
+          <h1 id="boothName">부스</h1>
+          <p class="who" id="boothStaff"></p>
+        </div>
+        <div class="head-side">
+          <div class="head-actions">
+            <button type="button" class="push-toggle" id="boothPushBtn">알림 켜기</button>
+            <button type="button" class="logout" id="logoutBtn">로그아웃</button>
+          </div>
+          <p class="push-status" id="boothPushStatus" hidden aria-live="polite"></p>
+          <p class="live" id="levelPill">여유 유지 중</p>
+        </div>
+      </div>
+      <div class="lamps" id="lamps">
+        <button type="button" class="lamp" data-level="full"><i class="dot red"></i><b>포화</b><small>지금 꽉 참</small></button>
+        <button type="button" class="lamp" data-level="mid"><i class="dot amber"></i><b>보통</b><small>점점 차는 중</small></button>
+        <button type="button" class="lamp on" data-level="ok"><i class="dot green"></i><b>여유</b><small>자리 있음</small></button>
+      </div>
+      <div class="thread" id="thread"></div>
+      <form class="composer" id="composer">
+        <input name="text" maxlength="200" placeholder="관제에 필요한 것을 적기" />
+        <button type="submit" aria-label="보내기">↑</button>
+      </form>
+      <div class="confirm" id="logoutConfirm" hidden>
+        <div class="confirm-card">
+          <h2>정말 로그아웃하시겠습니까?</h2>
+          <p id="logoutCopy"></p>
+          <div class="confirm-actions">
+            <button type="button" class="no" id="logoutCancel">취소</button>
+            <button type="button" class="yes" id="logoutYes">로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="control" hidden>
+      <div class="pad tight control-head">
+        <div>
+          <p class="kicker">오늘 장</p>
+          <h1>관제</h1>
+        </div>
+        <div class="control-head-actions">
+          <button type="button" class="push-toggle" id="controlPushBtn">알림 켜기</button>
+          <button type="button" class="logout" id="controlLogoutBtn">로그아웃</button>
+        </div>
+      </div>
+      <p class="push-status" id="controlPushStatus" hidden aria-live="polite"></p>
+      <div class="seg">
+        <button type="button" class="on" data-tab="board">현황</button>
+        <button type="button" id="requestsTab" data-tab="requests">요청 <span id="reqCount">0</span><span id="reqUnreadCount" class="unread-count" hidden></span></button>
+      </div>
+      <div id="boardPane">
+        <div class="counts">
+          <p><i class="swatch full"></i>포화<b id="countFull">0</b></p>
+          <p><i class="swatch mid"></i>보통<b id="countMid">0</b></p>
+          <p><i class="swatch ok"></i>여유<b id="countOk">0</b></p>
+        </div>
+        <div class="sorts">
+          <button type="button" data-sort="in">들어온 순</button>
+          <button type="button" class="on" data-sort="status">상태순</button>
+        </div>
+        <div class="board" id="board"></div>
+      </div>
+      <div id="requestPane" hidden>
+        <p class="gesture">한 번 터치하면 처리중. 연필은 대화. 오른쪽으로 밀면 처리완료 후 목록에서 삭제.</p>
+        <div class="reqs" id="reqs"></div>
+      </div>
+      <div class="confirm" id="chatSheet" hidden>
+        <div class="confirm-card chat-card">
+          <div class="chat-head">
+            <h2 id="chatTitle">대화</h2>
+            <button type="button" class="chat-close" id="chatClose">닫기</button>
+          </div>
+          <div class="chat-log" id="chatLog"></div>
+          <form class="composer chat-composer" id="chatForm">
+            <input name="text" maxlength="200" placeholder="답장 적기" />
+            <button type="submit" aria-label="보내기">↑</button>
+          </form>
+        </div>
+      </div>
+      <div class="confirm" id="controlLogoutConfirm" hidden>
+        <div class="confirm-card">
+          <h2>정말 로그아웃하시겠습니까?</h2>
+          <p>이 폰은 역할 선택으로 돌아갑니다. 부스 상태는 그대로 남습니다.</p>
+          <div class="confirm-actions">
+            <button type="button" class="no" id="controlLogoutCancel">취소</button>
+            <button type="button" class="yes" id="controlLogoutYes">로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
